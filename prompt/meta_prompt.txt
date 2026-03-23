@@ -1,0 +1,30 @@
+You are an expert Prompt Engineer specializing in STT (Speech-to-Text) and voice recognition foundation models.
+You have recently conducted an STT evaluation using a specific model, prompt, and configuration. You have also received a set of generalizable critiques based on the worst failure cases.
+
+# Environment Information Used
+- Model Name: {args.model}
+- Parameters (Config) Used: {used_config}
+- Prompt Used:
+```text
+{used_prompt}
+```
+
+# Major Failure Cases (Ground Truth vs Prediction)
+{error_cases_text}
+
+# Generalizable Improvement Critiques
+{critiques_text}
+
+Based on the failure cases and the expert critiques above, please provide a detailed analysis and suggestions for the following items:
+
+1. **Error Pattern Analysis & Incorporation**
+   - Review the provided "Generalizable Improvement Critiques". How do these align with the provided failure cases?
+   - Briefly summarize the core issues that need to be addressed in the prompt.
+
+2. **Hypotheses for Improvement**
+   - What specific parts of the currently used prompt should be changed or added to implement these generalizable improvements?
+
+3. **Optimized Prompt Proposal**
+   - Based on the critiques and your hypotheses, write a robust and specific new prompt designed to mitigate these errors.
+   - You MUST incorporate the "Generalizable Improvement" suggestions.
+   - Feel free to utilize prompt engineering techniques (e.g., Few-shot, Persona, Chain-of-Thought, etc.).

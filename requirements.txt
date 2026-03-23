@@ -1,0 +1,14 @@
+# STT Prompt Engineering Pipeline Dependencies
+
+# Google Cloud & Generative AI
+google-genai
+google-cloud-storage
+python-dotenv
+
+# Data Processing & Analysis
+pandas
+jiwer
+
+# Audio Processing
+# Note: pydub requires ffmpeg to be installed on your system for most operations.
+pydub

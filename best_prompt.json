@@ -1,0 +1,101 @@
+[
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_100757.json",
+        "lang": "en_us",
+        "group": "test",
+        "model": "gemini-3.1-flash-lite-preview",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_en_us_gemini-3.1-flash-lite-preview-audio_ts_true_prompt_v2.csv",
+        "config": "audio_ts_true",
+        "prompt_version": "prompt_v2.txt",
+        "wer": 0.0994764397905759,
+        "cer": 0.0516184229288464
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_101448.json",
+        "lang": "hi_in",
+        "group": "test",
+        "model": "gemini-3.1-flash-lite-preview",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_hi_in_gemini-3.1-flash-lite-preview-audio_ts_true_prompt_v3_hi_in.csv",
+        "config": "audio_ts_true",
+        "prompt_version": "prompt_v3_hi_in.txt",
+        "wer": 0.1188493565480696,
+        "cer": 0.0620454208104497
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_100757.json",
+        "lang": "el_gr",
+        "group": "test",
+        "model": "gemini-2.5-pro",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_el_gr_gemini-2.5-pro-audio_ts_true_prompt_v2.csv",
+        "config": "audio_ts_true",
+        "prompt_version": "prompt_v2.txt",
+        "wer": 0.1224137931034482,
+        "cer": 0.0664569406213134
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_101448.json",
+        "lang": "ar_eg",
+        "group": "test",
+        "model": "gemini-3.1-flash-lite-preview",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_ar_eg_gemini-3.1-flash-lite-preview-audio_ts_true_prompt_v3_ar_eg.csv",
+        "config": "audio_ts_true",
+        "prompt_version": "prompt_v3_ar_eg.txt",
+        "wer": 0.1585603112840466,
+        "cer": 0.0688135593220339
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_101448.json",
+        "lang": "cmn_hans_cn",
+        "group": "test",
+        "model": "gemini-2.5-pro",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_cmn_hans_cn_gemini-2.5-pro-default_prompt_v3_cmn_hans_cn.csv",
+        "config": "default",
+        "prompt_version": "prompt_v3_cmn_hans_cn.txt",
+        "wer": 0.1075394506136762,
+        "cer": 0.1064320738390539
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_100757.json",
+        "lang": "ko_kr",
+        "group": "test",
+        "model": "gemini-2.5-pro",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_ko_kr_gemini-2.5-pro-audio_ts_true_prompt_v2.csv",
+        "config": "audio_ts_true",
+        "prompt_version": "prompt_v2.txt",
+        "wer": 0.1649214659685864,
+        "cer": 0.1125554850982878
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_101448.json",
+        "lang": "ja_jp",
+        "group": "test",
+        "model": "gemini-2.5-pro",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_ja_jp_gemini-2.5-pro-audio_ts_true_prompt_v3_ja_jp.csv",
+        "config": "audio_ts_true",
+        "prompt_version": "prompt_v3_ja_jp.txt",
+        "wer": 1.0608108108108107,
+        "cer": 0.1349175929474894
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_101448.json",
+        "lang": "he_il",
+        "group": "test",
+        "model": "gemini-2.5-pro",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_he_il_gemini-2.5-pro-default_prompt_v3_he_il.csv",
+        "config": "default",
+        "prompt_version": "prompt_v3_he_il.txt",
+        "wer": 0.373015873015873,
+        "cer": 0.1775447477852106
+    },
+    {
+        "LOG_FILE": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/execution_log/batch_jobs_log_20260320_100757.json",
+        "lang": "yue_hant_hk",
+        "group": "test",
+        "model": "gemini-3.1-flash-lite-preview",
+        "local_inference_csv_path": "/Users/lexha/Documents/work/codes/prj/10-prompt-engg-stt-heidi/batch_inference_results/evaluation_test_yue_hant_hk_gemini-3.1-flash-lite-preview-temperature_prompt_v2.csv",
+        "config": "temperature",
+        "prompt_version": "prompt_v2.txt",
+        "wer": 0.9407705577918344,
+        "cer": 0.5602288984263233
+    }
+]

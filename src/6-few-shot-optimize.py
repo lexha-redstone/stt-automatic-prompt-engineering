@@ -3,6 +3,7 @@ import argparse
 import jiwer
 import os
 import re
+import json
 from google import genai
 from google.genai import types
 
@@ -66,6 +67,17 @@ def extract_prompt_from_response(text):
         
     return text.strip()
 
+def get_version_number(v_str):
+    """
+    Extracts the version number from a prompt version string (e.g., 'prompt_v2.txt', 'prompt_v3_en_us.txt').
+    """
+    if not v_str or pd.isna(v_str):
+        return 0
+    match = re.search(r'v(\d+)', str(v_str))
+    if match:
+        return int(match.group(1))
+    return 0
+
 def main():
     parser = argparse.ArgumentParser(description="Few-shot Optimize STT Prompts based on Error Analysis")
     parser.add_argument("--summary_csv", default="execution_log/evaluation_summary.csv", help="Path to evaluation summary CSV")
@@ -77,6 +89,7 @@ def main():
     parser.add_argument("--location", type=str, default="global", help="GCP Location")
     parser.add_argument("--top_n", type=int, default=15, help="Number of worst examples to analyze")
     parser.add_argument("--model", type=str, default="gemini-3.1-pro-preview", help="Model to use for generating optimized prompts")
+    parser.add_argument("--version", type=int, default=None, help="Version of the optimized prompt (default: max(current best) + 1)")
     
     args = parser.parse_args()
     
@@ -95,18 +108,30 @@ def main():
 
     df_summary = pd.read_csv(summary_csv_path)
     
-    # 1. Filter for group 'train' only
-    df_train = df_summary[df_summary['group'] == 'train']
-    
-    if df_train.empty:
-        print("Warning: No data found for group 'train' in summary CSV.")
+    # 1. Identify Best Prompt per Language (prioritize 'test' group for performance metric)
+    df_eval = df_summary[df_summary['group'] == 'test'] if 'test' in df_summary['group'].values else df_summary
+    if df_eval.empty:
+        print("Warning: No evaluation data found in summary CSV.")
         return
 
-    # Remove duplicates based on lang, group, model, config, and prompt_version (keep the latest)
-    subset_keys = ['lang', 'group', 'model', 'config']
-    if 'prompt_version' in df_train.columns:
-        subset_keys.append('prompt_version')
-    df_train = df_train.drop_duplicates(subset=subset_keys, keep='last')
+    # Sort by CER, then WER to find best
+    df_best = df_eval.sort_values(by=['cer', 'wer'], ascending=[True, True]).drop_duplicates(subset=['lang'], keep='first')
+    
+    # Save to best_prompt.json in project root
+    best_prompt_json_path = os.path.join(base_dir, 'best_prompt.json')
+    best_prompts_list = df_best.to_dict('records')
+    with open(best_prompt_json_path, 'w', encoding='utf-8') as f:
+        json.dump(best_prompts_list, f, indent=4, ensure_ascii=False)
+    print(f"✅ Saved current best prompts to: {best_prompt_json_path}")
+
+    # Determine next version
+    if args.version is not None:
+        next_v = args.version
+    else:
+        max_v = df_best['prompt_version'].apply(get_version_number).max()
+        next_v = max_v + 1
+    
+    print(f"Target Version for optimized prompts: v{next_v}")
 
     if not os.path.exists(meta_prompt_path):
         print(f"Error: Cannot find Meta Prompt file: {meta_prompt_path}")
@@ -117,7 +142,7 @@ def main():
         
     client = genai.Client(vertexai=True, project=args.project_id, location=args.location)
     
-    for _, row in df_train.iterrows():
+    for _, row in df_best.iterrows():
         lang = row['lang']
         group = row['group']
         model_used = row['model']
@@ -126,14 +151,14 @@ def main():
         pv_clean = str(prompt_version).replace('.txt', '') if pd.notna(prompt_version) and prompt_version else 'default'
         local_csv = row['local_inference_csv_path']
         
-        print(f"[{group}_{lang}] Processing Model: {model_used}, Config: {config_used}...")
+        print(f"[{lang}] Optimizing from current best (Version: {prompt_version}, Group: {group})...")
         
         # Handle relative paths
         if not os.path.isabs(local_csv):
             local_csv = os.path.join(base_dir, local_csv)
             
         if not os.path.exists(local_csv):
-            print(f"  -> File not found, skipping: {local_csv}")
+            print(f"  -> File not found, skipping evaluation data: {local_csv}")
             continue
             
         print(f"  -> Loading evaluation data and calculating WER/CER...")
@@ -153,32 +178,46 @@ def main():
                 error_cases_text += f"Audio File:   {os.path.basename(err_row['noisy_output_path'])}\n"
             error_cases_text += "\n"
             
-        critic_csv = os.path.join(base_dir, args.critic_dir, f"critic_{group}_{lang}_{model_used}_{config_used}_{pv_clean}.csv")
+        # Try multiple critic file naming patterns
+        critic_paths = [
+            os.path.join(base_dir, args.critic_dir, f"critic_{group}_{lang}_{model_used}_{config_used}_{pv_clean}.csv"),
+            os.path.join(base_dir, args.critic_dir, f"critic_{lang}.csv")
+        ]
+        
         critiques_text = ""
-        if os.path.exists(critic_csv):
-            df_critics = pd.read_csv(critic_csv)
-            for j, (_, critic_row) in enumerate(df_critics.iterrows(), 1):
-                critiques_text += f"## Critique {j}\n"
-                critiques_text += f"Error Pattern: {critic_row.get('error_pattern', '')}\n"
-                critiques_text += f"Affected Cases: {critic_row.get('affected_cases', '')}\n"
-                critiques_text += f"Reason for Failure: {critic_row.get('reason_for_failure', '')}\n"
-                critiques_text += f"Generalizable Improvement: {critic_row.get('generalizable_improvement', '')}\n\n"
-        else:
-            print(f"  -> Warning: Critic file ({critic_csv}) not found.")
+        critic_file_found = False
+        for critic_csv in critic_paths:
+            if os.path.exists(critic_csv):
+                df_critics = pd.read_csv(critic_csv)
+                for j, (_, critic_row) in enumerate(df_critics.iterrows(), 1):
+                    critiques_text += f"## Critique {j}\n"
+                    critiques_text += f"Error Pattern: {critic_row.get('error_pattern', '')}\n"
+                    critiques_text += f"Affected Cases: {critic_row.get('affected_cases', '')}\n"
+                    critiques_text += f"Reason for Failure: {critic_row.get('reason_for_failure', '')}\n"
+                    critiques_text += f"Generalizable Improvement: {critic_row.get('generalizable_improvement', '')}\n\n"
+                critic_file_found = True
+                break
+        
+        if not critic_file_found:
+            print(f"  -> Warning: Critic file not found for {lang}. Proceeding with error cases only.")
 
-        # Read the previously used prompt
-        prompt_path = os.path.join(prompt_dir_path, str(prompt_version)) if prompt_version else os.path.join(prompt_dir_path, "prompt_v2.txt")
-        if os.path.exists(prompt_path):
-            with open(prompt_path, 'r', encoding='utf-8') as f:
-                used_prompt = f.read()
-        else:
-            fallback_path = os.path.join(prompt_dir_path, "prompt_v2.txt")
-            if os.path.exists(fallback_path):
-                with open(fallback_path, 'r', encoding='utf-8') as f:
+        # Read the previously used prompt (check multiple locations)
+        prompt_paths = [
+            os.path.join(prompt_dir_path, str(prompt_version)),
+            os.path.join(output_dir_path, str(prompt_version)),
+            os.path.join(prompt_dir_path, "prompt_v2.txt")
+        ]
+        
+        used_prompt = ""
+        for p in prompt_paths:
+            if os.path.exists(p):
+                with open(p, 'r', encoding='utf-8') as f:
                     used_prompt = f.read()
-            else:
-                used_prompt = "Default STT Prompt (Not Found)"
-                print(f"  -> Warning: Previous prompt file not found.")
+                break
+        
+        if not used_prompt:
+            used_prompt = "Default STT Prompt (Not Found)"
+            print(f"  -> Warning: Previous prompt file not found.")
             
         # 2. Insert data into meta prompt template
         analysis_prompt = meta_prompt_template.replace('{args.model}', str(model_used))\
@@ -200,11 +239,11 @@ def main():
             # 3. Save Improved Prompt
             new_prompt = extract_prompt_from_response(response.text)
             
-            output_file = os.path.join(output_dir_path, f"prompt_optimized_{group}_{lang}_{model_used}_{config_used}_{pv_clean}.txt")
+            output_file = os.path.join(output_dir_path, f"prompt_v{next_v}_{lang}.txt")
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(new_prompt)
                 
-            report_file = os.path.join(output_dir_path, f"analysis_report_optimized_{group}_{lang}_{model_used}_{config_used}_{pv_clean}.md")
+            report_file = os.path.join(output_dir_path, f"analysis_report_v{next_v}_{lang}.md")
             with open(report_file, "w", encoding="utf-8") as f:
                 f.write(response.text)
                 

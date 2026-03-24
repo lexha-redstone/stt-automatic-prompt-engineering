@@ -144,14 +144,31 @@ def main():
     
     for _, row in df_best.iterrows():
         lang = row['lang']
-        group = row['group']
-        model_used = row['model']
-        config_used = row['config']
-        prompt_version = row.get('prompt_version', '')
-        pv_clean = str(prompt_version).replace('.txt', '') if pd.notna(prompt_version) and prompt_version else 'default'
-        local_csv = row['local_inference_csv_path']
         
-        print(f"[{lang}] Optimizing from current best (Version: {prompt_version}, Group: {group})...")
+        # We need the 'train' group data for the actual optimization to avoid data peeking
+        # Match the best configuration found (from test) with its corresponding train run
+        train_row = df_summary[
+            (df_summary['lang'] == lang) &
+            (df_summary['group'] == 'train') &
+            (df_summary['model'] == row['model']) &
+            (df_summary['config'] == row['config']) &
+            (df_summary['prompt_version'].astype(str) == str(row.get('prompt_version', '')))
+        ]
+        
+        if train_row.empty:
+            print(f"[{lang}] Warning: No 'train' group data found for the best config. Skipping optimization.")
+            continue
+            
+        train_row = train_row.iloc[-1] # Get the latest one
+        
+        group = train_row['group'] # This will be 'train'
+        model_used = train_row['model']
+        config_used = train_row['config']
+        prompt_version = train_row.get('prompt_version', '')
+        pv_clean = str(prompt_version).replace('.txt', '') if pd.notna(prompt_version) and prompt_version else 'default'
+        local_csv = train_row['local_inference_csv_path']
+        
+        print(f"[{lang}] Optimizing from current best (Version: {prompt_version}). Using '{group}' data for error analysis...")
         
         # Handle relative paths
         if not os.path.isabs(local_csv):
